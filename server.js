@@ -14,6 +14,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/todos', todosRouter);
 
+// Add root route to ensure the app responds properly
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Health check route for Render
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Simple CRUD App is running!' });
+});
+
 async function start(){
   try{
     const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/simple_crud';
