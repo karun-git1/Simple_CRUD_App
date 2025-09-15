@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: simple-crud-app
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # This will be set in Render dashboard
+    healthCheckPath: /health
