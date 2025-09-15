@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Todo CRUD</title>
+  <style>
+    body{ font-family: Arial, sans-serif; max-width:600px; margin:40px auto; }
+    li{ margin:8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Todos</h1>
+  <form id="addForm">
+    <input id="text" placeholder="New todo" required />
+    <button>Add</button>
+  </form>
+  <ul id="list"></ul>
+
+  <script>
+    const list = document.getElementById('list');
+    async function fetchTodos(){
+      const res = await fetch('/api/todos');
+      const data = await res.json();
+      list.innerHTML = '';
+      data.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t.text + (t.done? ' ✅' : '');
+        const toggle = document.createElement('button');
+        toggle.textContent = t.done? 'Undo' : 'Done';
+        toggle.onclick = async ()=>{
+          await fetch('/api/todos/'+t._id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ done: !t.done }) });
+          fetchTodos();
+        };
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.onclick = async ()=>{ await fetch('/api/todos/'+t._id, { method:'DELETE' }); fetchTodos(); };
+        li.append(' ');
+        li.appendChild(toggle);
+        li.append(' ');
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('addForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const text = document.getElementById('text').value;
+      await fetch('/api/todos', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+      document.getElementById('text').value = '';
+      fetchTodos();
+    }
+
+    fetchTodos();
+  </script>
+</body>
+</html>
