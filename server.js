@@ -12,16 +12,22 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// API routes
 app.use('/api/todos', todosRouter);
-
-// Add root route to ensure the app responds properly
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Health check route for Render
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Simple CRUD App is running!' });
+});
+
+// Serve index.html for root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Fallback route - serve index.html for all unmatched routes (SPA routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 async function start(){
