@@ -60,24 +60,47 @@ async function start() {
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/simple_crud';
     
-    // Connect to MongoDB
-    await mongoose.connect(uri, { 
-      useNewUrlParser: true, 
-      useUnifiedTopology: true 
-    });
+    // Only connect to MongoDB if URI is provided and not localhost
+    if (process.env.MONGODB_URI && !uri.includes('127.0.0.1')) {
+      // Connect to MongoDB (production/cloud)
+      await mongoose.connect(uri, { 
+        useNewUrlParser: true, 
+        useUnifiedTopology: true 
+      });
+      console.log('✅ Connected to MongoDB');
+    } else {
+      console.log('⚠️  Running without MongoDB (development mode)');
+      console.log('   Set MONGODB_URI environment variable to connect to database');
+    }
     
-    console.log('✅ Connected to MongoDB');
-    
-    // Start server
+    // Start server regardless of database connection
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📱 App available at: http://localhost:${PORT}`);
       console.log(`🏥 Health check at: http://localhost:${PORT}/health`);
+      
+      if (!process.env.MONGODB_URI || uri.includes('127.0.0.1')) {
+        console.log('💡 To use database features:');
+        console.log('   1. Install MongoDB locally, OR');
+        console.log('   2. Set MONGODB_URI environment variable to cloud database');
+      }
     });
     
   } catch (err) {
     console.error('❌ Failed to start server:', err);
-    process.exit(1);
+    
+    // Try to start server without database connection
+    if (err.name === 'MongooseServerSelectionError') {
+      console.log('🔄 Attempting to start server without database...');
+      
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT} (without database)`);
+        console.log(`📱 App available at: http://localhost:${PORT}`);
+        console.log(`⚠️  Database features disabled - set MONGODB_URI to enable`);
+      });
+    } else {
+      process.exit(1);
+    }
   }
 }
 
